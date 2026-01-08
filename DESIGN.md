@@ -38,8 +38,8 @@ This project implements crash isolation for third-party audio algorithms in Andr
 │  └────────────────────────────────────────────────────────────┘ │
 │  ┌────────────────────────────────────────────────────────────┐ │
 │  │  Third-party Library Loader (dlopen/dlsym)                │ │
-│  │  - libkaraoke.so (no-mic karaoke)                         │ │
-│  │  - libnoise_reduction.so (noise reduction)                │ │
+│  │  - libwt_ksong_signalprocessing.so (no-mic karaoke)      │ │
+│  │  - libwt_signalprocessing.so (noise reduction)           │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └───────────────────────────────────────────────────────────────────┘
 ```

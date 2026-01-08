@@ -152,10 +152,10 @@ int effectd_session_open(EffectSession* session) {
     // const char* libPath = NULL;
     // switch (session->effectType) {
     //     case EFFECT_LIB_KARAOKE_NO_MIC:
-    //         libPath = "libkaraoke.so";
+    //         libPath = "libwt_ksong_signalprocessing.so";
     //         break;
     //     case EFFECT_LIB_NOISE_REDUCTION:
-    //         libPath = "libnoise_reduction.so";
+    //         libPath = "libwt_signalprocessing.so";
     //         break;
     //     default:
     //         return -1;

@@ -74,7 +74,7 @@ Audio HAL (libeffect_client.so)
     ↕ HIDL (Control) + Shared Memory (Data)
 effectd Process
     ↓ dlopen/dlsym
-Third-party Libraries (libkaraoke.so, libnoise_reduction.so, etc.)
+Third-party Libraries (libwt_ksong_signalprocessing.so, libwt_signalprocessing.so, etc.)
 ```
 
 ## 目录结构 (Directory Structure)
