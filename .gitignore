@@ -36,6 +36,38 @@
 *.exe
 *.out
 *.app
+effectd_server
+test_ringbuffer
 
 # debug information files
 *.dwo
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Android build
+*.apk
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+.gradle/
+build/
+local.properties
+
+# Temporary files
+/tmp/
+*.log
+*.tmp
+
+# Test outputs
+*.test
+*.prof
+

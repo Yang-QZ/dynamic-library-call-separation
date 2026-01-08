@@ -1,0 +1,74 @@
+package vendor.audio.effectservice@1.0;
+
+import types;
+
+/**
+ * IEffectService - Audio effect service interface
+ * 
+ * This service runs in an independent effectd process and provides
+ * audio effect processing with crash isolation from audio HAL.
+ */
+interface IEffectService {
+    /**
+     * Open a new effect session
+     * 
+     * @param effectType Type of effect to create
+     * @param config Audio configuration
+     * @return result Result code
+     * @return sessionId Unique session identifier (valid if result == OK)
+     * @return memInfo Shared memory and eventfd information for data plane
+     */
+    open(EffectType effectType, AudioConfig config)
+        generates (Result result, uint32_t sessionId, SharedMemoryInfo memInfo);
+
+    /**
+     * Start processing for a session
+     * 
+     * @param sessionId Session identifier returned by open()
+     * @return result Result code
+     */
+    start(uint32_t sessionId) generates (Result result);
+
+    /**
+     * Stop processing for a session
+     * 
+     * @param sessionId Session identifier
+     * @return result Result code
+     */
+    stop(uint32_t sessionId) generates (Result result);
+
+    /**
+     * Close and release a session
+     * 
+     * @param sessionId Session identifier
+     * @return result Result code
+     */
+    close(uint32_t sessionId) generates (Result result);
+
+    /**
+     * Set algorithm parameter
+     * 
+     * @param sessionId Session identifier
+     * @param param Parameter to set
+     * @return result Result code
+     */
+    setParam(uint32_t sessionId, EffectParam param) generates (Result result);
+
+    /**
+     * Query session state
+     * 
+     * @param sessionId Session identifier
+     * @return result Result code
+     * @return state Current session state
+     */
+    queryState(uint32_t sessionId) generates (Result result, SessionState state);
+
+    /**
+     * Query session statistics
+     * 
+     * @param sessionId Session identifier
+     * @return result Result code
+     * @return stats Session statistics
+     */
+    queryStats(uint32_t sessionId) generates (Result result, SessionStats stats);
+};

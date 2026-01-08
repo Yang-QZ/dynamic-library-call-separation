@@ -1,0 +1,51 @@
+# SELinux policy for effectd service
+
+type effectd, domain;
+type effectd_exec, exec_type, vendor_file_type, file_type;
+
+init_daemon_domain(effectd)
+
+# Allow effectd to register with hwservicemanager
+allow effectd hwservicemanager:binder { call transfer };
+allow effectd hidl_base_hwservice:hwservice_manager add;
+
+# Allow effectd to use binder
+allow effectd vendor_audio_effectservice_hwservice:hwservice_manager { add find };
+
+# Allow audio HAL to access effectd service
+allow hal_audio_default vendor_audio_effectservice_hwservice:hwservice_manager find;
+
+# Allow shared memory operations
+allow effectd tmpfs:file { create open read write map unlink };
+allow hal_audio_default tmpfs:file { open read write map };
+
+# Allow ashmem (for older Android versions)
+allow effectd ashmem_device:chr_file rw_file_perms;
+allow hal_audio_default ashmem_device:chr_file rw_file_perms;
+
+# Allow eventfd operations
+allow effectd self:fd use;
+
+# Allow real-time scheduling
+allow effectd self:capability sys_nice;
+allow effectd self:process { setsched setpgid };
+
+# Allow CPU affinity
+allow effectd kernel:system module_request;
+
+# Allow loading third-party libraries
+allow effectd vendor_file:file { open read getattr execute map };
+allow effectd vendor_file:dir { search getattr };
+
+# Allow logging
+allow effectd kmsg_device:chr_file write;
+
+# Crash isolation - allow init to restart
+# (This is typically already in init policy)
+
+# File descriptor passing via binder
+allow hal_audio_default effectd:fd use;
+allow effectd hal_audio_default:fd use;
+
+# Define hwservice type
+type vendor_audio_effectservice_hwservice, hwservice_manager_type;
