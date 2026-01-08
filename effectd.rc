@@ -1,0 +1,14 @@
+service effectd /vendor/bin/effectd
+    class main
+    user audioserver
+    group audio
+    capabilities SYS_NICE
+    priority -20
+    ioprio rt 4
+    writepid /dev/cpuset/system-background/tasks
+    # Restart on crash for crash isolation
+    onrestart restart audioserver
+    # Automatically restart if crashed
+    restart_period 5
+    # SELinux context
+    seclabel u:r:effectd:s0

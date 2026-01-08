@@ -1,0 +1,89 @@
+// Common library with shared memory and ring buffer utilities
+cc_library {
+    name: "libeffect_common",
+    vendor: true,
+    srcs: [
+        "common/src/effect_shared_memory.c",
+        "common/src/effect_ringbuffer.c",
+    ],
+    export_include_dirs: ["common/include"],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-parameter",
+    ],
+    shared_libs: [
+        "liblog",
+    ],
+}
+
+// Client library for HAL integration
+cc_library_shared {
+    name: "libeffect_client",
+    vendor: true,
+    srcs: [
+        "client/src/effect_client.c",
+    ],
+    export_include_dirs: ["client/include"],
+    local_include_dirs: ["common/include"],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-parameter",
+    ],
+    shared_libs: [
+        "liblog",
+        "libutils",
+        "libeffect_common",
+    ],
+    // TODO: Add HIDL dependencies when implementing HIDL client
+    // shared_libs: [
+    //     "vendor.audio.effectservice@1.0",
+    //     "libhidlbase",
+    // ],
+}
+
+// effectd server executable
+cc_binary {
+    name: "effectd",
+    vendor: true,
+    init_rc: ["effectd.rc"],
+    srcs: [
+        "effectd/src/main.c",
+        "effectd/src/effectd_session.c",
+    ],
+    local_include_dirs: [
+        "effectd/include",
+        "common/include",
+    ],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Wno-unused-parameter",
+    ],
+    shared_libs: [
+        "liblog",
+        "libutils",
+        "libeffect_common",
+    ],
+    // TODO: Add HIDL dependencies when implementing HIDL service
+    // shared_libs: [
+    //     "vendor.audio.effectservice@1.0",
+    //     "libhidlbase",
+    // ],
+}
+
+// HIDL interface (placeholder for actual HIDL compilation)
+// In real Android build, this would use hidl_interface
+// hidl_interface {
+//     name: "vendor.audio.effectservice@1.0",
+//     root: "vendor.audio",
+//     srcs: [
+//         "hidl/1.0/types.hal",
+//         "hidl/1.0/IEffectService.hal",
+//     ],
+//     interfaces: [
+//         "android.hidl.base@1.0",
+//     ],
+//     gen_java: false,
+// }

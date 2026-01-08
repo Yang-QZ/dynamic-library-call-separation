@@ -1,0 +1,78 @@
+package vendor.audio.effectservice@1.0;
+
+/**
+ * Audio format configuration
+ */
+struct AudioConfig {
+    uint32_t sampleRate;      // Sample rate in Hz (e.g., 48000)
+    uint32_t channels;        // Number of channels (1, 2, etc.)
+    uint32_t format;          // Audio format (PCM_16, PCM_32, etc.)
+    uint32_t framesPerBuffer; // Frames per processing callback
+};
+
+/**
+ * Effect type
+ */
+enum EffectType : uint32_t {
+    KARAOKE_NO_MIC = 0,       // No-mic karaoke
+    NOISE_REDUCTION = 1,      // Normal noise reduction
+};
+
+/**
+ * Session state
+ */
+enum SessionState : uint32_t {
+    IDLE = 0,
+    OPENED = 1,
+    STARTED = 2,
+    STOPPED = 3,
+    ERROR = 4,
+};
+
+/**
+ * Result codes
+ */
+enum Result : int32_t {
+    OK = 0,
+    ERROR_INVALID_ARGUMENTS = -1,
+    ERROR_NO_MEMORY = -2,
+    ERROR_INVALID_STATE = -3,
+    ERROR_NOT_SUPPORTED = -4,
+    ERROR_TIMEOUT = -5,
+    ERROR_DEAD_OBJECT = -6,
+};
+
+/**
+ * Shared memory information for data plane
+ */
+struct SharedMemoryInfo {
+    handle sharedMemoryFd;    // File descriptor for shared memory
+    handle eventFdIn;         // EventFD for HAL->effectd notification
+    handle eventFdOut;        // EventFD for effectd->HAL notification
+    uint64_t size;            // Total size of shared memory
+    uint32_t inputRingBufferOffset;  // Offset of input ring buffer
+    uint32_t inputRingBufferSize;    // Size of input ring buffer
+    uint32_t outputRingBufferOffset; // Offset of output ring buffer
+    uint32_t outputRingBufferSize;   // Size of output ring buffer
+};
+
+/**
+ * Session statistics
+ */
+struct SessionStats {
+    uint64_t processedFrames;
+    uint64_t droppedFrames;
+    uint32_t avgLatencyUs;
+    uint32_t p95LatencyUs;
+    uint32_t maxLatencyUs;
+    uint32_t timeoutCount;
+    uint32_t xrunCount;
+};
+
+/**
+ * Parameter for algorithm
+ */
+struct EffectParam {
+    uint32_t key;
+    vec<uint8_t> value;
+};
