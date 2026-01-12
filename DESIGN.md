@@ -20,13 +20,13 @@ This project implements crash isolation for third-party audio algorithms in Andr
 │                         Audio HAL                                │
 │  ┌────────────────────────────────────────────────────────────┐ │
 │  │  libeffect_client.so                                       │ │
-│  │  - Process(): Lock-free ringbuffer read/write             │ │
-│  │  - 20ms timeout with passthrough fallback                 │ │
+│  │  - Process(): Lock-free FMQ read/write                     │ │
+│  │  - 20ms timeout with passthrough fallback                  │ │
 │  └────────────────────────────────────────────────────────────┘ │
 └───────────────────┬────────────────────────────┬─────────────────┘
                     │                            │
-          Control Plane (HIDL)          Data Plane (Shared Memory)
-     open/start/stop/close/setParam      PCM via lock-free ringbuffer
+          Control Plane (HIDL)          Data Plane (FMQ)
+     open/start/stop/close/setParam    PCM via Fast Message Queue
                     │                            │
 ┌───────────────────┴────────────────────────────┴─────────────────┐
 │                         effectd Process                           │
@@ -54,14 +54,15 @@ This project implements crash isolation for third-party audio algorithms in Andr
 
 ### 2. Low Latency Data Path
 - **Target**: Additional latency < 10ms
-- Lock-free ring buffer implementation using atomic operations
-- Shared memory (memfd/ashmem) for zero-copy data transfer
-- eventfd for efficient signaling (no syscalls in common case)
+- Android Fast Message Queue (FMQ) for zero-copy data transfer
+- FMQ uses lock-free atomic operations internally
+- Shared memory backend for non-Android platforms (fallback)
+- eventfd for efficient signaling and timeout control (optional)
 - Real-time thread safe: no HIDL calls, no malloc, no heavy locks
 
 ### 3. Multi-Instance Support
 - Concurrent sessions (e.g., karaoke + noise reduction)
-- Independent shared memory region per session
+- Independent FMQ pair per session (input + output)
 - Independent eventfd pair per session
 - Per-session processing thread with isolation
 
