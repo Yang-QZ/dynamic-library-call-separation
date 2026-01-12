@@ -54,16 +54,14 @@ public:
         size_t bufferSize = 1024 * 1024; // 1MB FMQ capacity
         
         // Create FMQ for input (HAL -> effectd)
-        auto inputFmq = std::make_unique<MessageQueue<uint8_t, 
-                                         kSynchronizedReadWrite>>(bufferSize);
+        auto inputFmq = std::make_unique<MessageQueue<uint8_t, kSynchronizedReadWrite>>(bufferSize);
         if (!inputFmq || !inputFmq->isValid()) {
             _hidl_cb(Result::ERROR_NO_MEMORY, 0, {});
             return Void();
         }
         
         // Create FMQ for output (effectd -> HAL)
-        auto outputFmq = std::make_unique<MessageQueue<uint8_t, 
-                                          kSynchronizedReadWrite>>(bufferSize);
+        auto outputFmq = std::make_unique<MessageQueue<uint8_t, kSynchronizedReadWrite>>(bufferSize);
         if (!outputFmq || !outputFmq->isValid()) {
             _hidl_cb(Result::ERROR_NO_MEMORY, 0, {});
             return Void();
@@ -149,7 +147,23 @@ public:
             return Result::ERROR_INVALID_ARGUMENTS;
         }
         
-        // TODO: Pass parameter to third-party library
+        // TODO: In a real implementation, this would:
+        // 1. Validate the parameter key and value
+        // 2. Lock the session if needed
+        // 3. Call the third-party library's parameter setting function
+        //    e.g., libHandle->setParameter(param.key, param.value.data(), param.value.size())
+        // 4. Handle any errors from the library
+        //
+        // Example implementation:
+        // auto& session = it->second;
+        // if (session->libHandle && session->libContext) {
+        //     int ret = third_party_lib_set_param(session->libContext, 
+        //                                         param.key, 
+        //                                         param.value.data(),
+        //                                         param.value.size());
+        //     return (ret == 0) ? Result::OK : Result::ERROR_INVALID_ARGUMENTS;
+        // }
+        
         return Result::OK;
     }
     

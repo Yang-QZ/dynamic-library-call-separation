@@ -23,7 +23,7 @@ EffectFmqHandle effect_fmq_create(EffectFmqType type, size_t capacity, size_t el
         return nullptr;
     }
     
-    auto* ctx = new EffectFmqContext();
+    auto* ctx = new(std::nothrow) EffectFmqContext();
     if (!ctx) {
         return nullptr;
     }
@@ -32,7 +32,7 @@ EffectFmqHandle effect_fmq_create(EffectFmqType type, size_t capacity, size_t el
     ctx->elementSize = elementSize;
     
     // Create FMQ with specified capacity
-    ctx->queue = new MessageQueue<uint8_t, kSynchronizedReadWrite>(capacity * elementSize);
+    ctx->queue = new(std::nothrow) MessageQueue<uint8_t, kSynchronizedReadWrite>(capacity * elementSize);
     
     if (!ctx->queue || !ctx->queue->isValid()) {
         delete ctx->queue;
@@ -48,23 +48,22 @@ EffectFmqHandle effect_fmq_open(const EffectFmqDescriptor* desc) {
         return nullptr;
     }
     
-    auto* ctx = new EffectFmqContext();
-    if (!ctx) {
-        return nullptr;
-    }
+    // NOTE: In a real implementation, this function would reconstruct the FMQ
+    // from an MQDescriptorSync that was passed via HIDL. Since HIDL descriptors
+    // contain native handles and complex structures that can't be easily
+    // serialized to a plain C struct, this function is not implemented for the
+    // simplified effect_fmq wrapper.
+    //
+    // In actual usage, FMQ descriptors should be passed directly through HIDL
+    // interfaces (e.g., IEffectService::open() returns FmqInfo with MQDescriptorSync),
+    // and the C++ HIDL service implementation would create MessageQueue objects
+    // directly from these descriptors.
+    //
+    // This wrapper is primarily for the producer side (creating FMQs) and for
+    // standalone fallback mode.
     
-    ctx->type = EFFECT_FMQ_SYNCHRONIZED;
-    ctx->elementSize = 1; // byte-based
-    
-    // Reconstruct MQDescriptor from our descriptor
-    std::vector<android::hardware::GrantorDescriptor> grantors;
-    // Note: This is a simplified version. Full implementation would need to properly
-    // reconstruct the MQDescriptor from the file descriptor and metadata
-    
-    // For now, we'll indicate this needs proper implementation
-    // In real code, you'd pass the actual MQDescriptorSync from HIDL
-    delete ctx;
-    return nullptr; // TODO: Implement descriptor-based reconstruction
+    (void)desc; // Unused in this stub
+    return nullptr;
 }
 
 int effect_fmq_get_descriptor(EffectFmqHandle handle, EffectFmqDescriptor* desc) {
@@ -77,15 +76,20 @@ int effect_fmq_get_descriptor(EffectFmqHandle handle, EffectFmqDescriptor* desc)
         return -1;
     }
     
-    // Note: This is a simplified version. In actual HIDL usage, the descriptor
-    // is passed directly as MQDescriptorSync<uint8_t> through HIDL interface
-    // The descriptor contains native handles that can't be easily serialized to plain C
+    // NOTE: Similar to effect_fmq_open(), proper descriptor extraction requires
+    // using HIDL's MQDescriptorSync which contains native handles and GrantorDescriptors.
+    // These cannot be easily serialized to a plain C struct.
+    //
+    // In actual HIDL service implementation, use:
+    //   const MQDescriptorSync<uint8_t>* descriptor = ctx->queue->getDesc();
+    //   // Pass this descriptor through HIDL interface
+    //
+    // This function is provided for API completeness but should not be used
+    // for actual descriptor passing. Use HIDL interfaces directly instead.
     
-    // For compatibility, we're just zeroing the descriptor
-    // In real implementation, this would be handled by HIDL serialization
     memset(desc, 0, sizeof(EffectFmqDescriptor));
     
-    return 0; // TODO: Proper descriptor extraction
+    return -1; // Indicates this function is not fully implemented
 }
 
 size_t effect_fmq_write(EffectFmqHandle handle, const void* data, size_t count) {

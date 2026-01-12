@@ -6,13 +6,14 @@
 
 #ifdef __cplusplus
 extern "C" {
-// C++ doesn't have C11 atomics, use opaque types
+// For C++ compilation, use a wrapper struct to avoid direct atomic type usage
+// The actual atomic operations are handled in the .c file
 typedef struct {
     uint64_t val;
-} atomic_uint_fast64_t_compat;
-#define atomic_uint_fast64_t atomic_uint_fast64_t_compat
+} effect_atomic_u64_t;
 #else
 #include <stdatomic.h>
+typedef atomic_uint_fast64_t effect_atomic_u64_t;
 #endif
 
 /**
@@ -20,10 +21,10 @@ typedef struct {
  * Uses atomic operations for thread-safe single-producer single-consumer
  */
 typedef struct {
-    atomic_uint_fast64_t write_index;  // Write position (producer)
-    atomic_uint_fast64_t read_index;   // Read position (consumer)
-    uint32_t capacity;                 // Buffer capacity in bytes
-    uint8_t* data;                     // Data buffer
+    effect_atomic_u64_t write_index;  // Write position (producer)
+    effect_atomic_u64_t read_index;   // Read position (consumer)
+    uint32_t capacity;                // Buffer capacity in bytes
+    uint8_t* data;                    // Data buffer
 } effect_ringbuffer_t;
 
 /**
