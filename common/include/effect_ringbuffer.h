@@ -3,10 +3,16 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdatomic.h>
 
 #ifdef __cplusplus
 extern "C" {
+// C++ doesn't have C11 atomics, use opaque types
+typedef struct {
+    uint64_t val;
+} atomic_uint_fast64_t_compat;
+#define atomic_uint_fast64_t atomic_uint_fast64_t_compat
+#else
+#include <stdatomic.h>
 #endif
 
 /**

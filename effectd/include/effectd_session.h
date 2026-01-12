@@ -4,7 +4,26 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <pthread.h>
+
+// Forward declare for C compatibility
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+typedef void* EffectFmqHandle;
+
+#ifdef __cplusplus
+}
+#endif
+
 #include "effect_ringbuffer.h"
+
+// Use FMQ by default on Android, fallback to shared memory on other platforms
+#ifndef USE_SHARED_MEMORY
+#define USE_FMQ 1
+#else
+#define USE_FMQ 0
+#endif
 
 typedef enum {
     SESSION_STATE_IDLE = 0,
@@ -42,17 +61,23 @@ typedef struct EffectSession {
     AudioConfig config;
     SessionState state;
     
-    // Shared memory
+#if USE_FMQ
+    // FMQ-based communication
+    EffectFmqHandle inputFmq;
+    EffectFmqHandle outputFmq;
+#else
+    // Shared memory (legacy)
     void* shmAddr;
     size_t shmSize;
-    
-    // Event FDs
-    int eventFdIn;   // HAL -> effectd
-    int eventFdOut;  // effectd -> HAL
     
     // Ring buffers
     effect_ringbuffer_t inputRb;
     effect_ringbuffer_t outputRb;
+#endif
+    
+    // Event FDs
+    int eventFdIn;   // HAL -> effectd
+    int eventFdOut;  // effectd -> HAL
     
     // Third-party library handle
     void* libHandle;

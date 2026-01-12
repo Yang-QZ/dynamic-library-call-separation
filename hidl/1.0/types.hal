@@ -1,5 +1,8 @@
 package vendor.audio.effectservice@1.0;
 
+import android.hardware.common@1.0::types;
+import android.hardware.MQDescriptorSync;
+
 /**
  * Audio format configuration
  */
@@ -43,7 +46,20 @@ enum Result : int32_t {
 };
 
 /**
- * Shared memory information for data plane
+ * Fast Message Queue information for data plane
+ * Using FMQ (Fast Message Queue) instead of shared memory + ring buffer
+ * for more efficient IPC with zero-copy audio data transfer
+ */
+struct FmqInfo {
+    fmq_sync<uint8_t> inputQueue;   // FMQ for HAL->effectd audio data
+    fmq_sync<uint8_t> outputQueue;  // FMQ for effectd->HAL processed data
+    handle eventFdIn;               // EventFD for HAL->effectd notification (optional)
+    handle eventFdOut;              // EventFD for effectd->HAL notification (optional)
+};
+
+/**
+ * Shared memory information for data plane (legacy/fallback)
+ * Deprecated: Use FmqInfo for new implementations
  */
 struct SharedMemoryInfo {
     handle sharedMemoryFd;    // File descriptor for shared memory

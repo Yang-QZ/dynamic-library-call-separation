@@ -1,4 +1,5 @@
 #include "effectd_session.h"
+#include "effect_fmq.h"
 #include "effect_shared_memory.h"
 #include <stdlib.h>
 #include <string.h>
@@ -62,7 +63,36 @@ static void* processing_thread_func(void* arg) {
         
         int64_t start_time = get_time_us();
         
-        // Read input from ring buffer
+#if USE_FMQ
+        // Read input from FMQ
+        size_t available = effect_fmq_available_to_read(session->inputFmq);
+        if (available < bufferSize) {
+            // Not enough data
+            continue;
+        }
+        
+        size_t read = effect_fmq_read(session->inputFmq, inputBuffer, bufferSize);
+        if (read < bufferSize) {
+            pthread_mutex_lock(&session->statsMutex);
+            session->stats.xrunCount++;
+            pthread_mutex_unlock(&session->statsMutex);
+            continue;
+        }
+        
+        // Process audio with third-party library
+        mock_process_audio(session->libContext, inputBuffer, outputBuffer, 
+                          session->config.framesPerBuffer, bytesPerFrame);
+        
+        // Write output to FMQ
+        size_t written = effect_fmq_write(session->outputFmq, outputBuffer, bufferSize);
+        if (written < bufferSize) {
+            pthread_mutex_lock(&session->statsMutex);
+            session->stats.droppedFrames += session->config.framesPerBuffer;
+            pthread_mutex_unlock(&session->statsMutex);
+            continue;
+        }
+#else
+        // Legacy: Read input from ring buffer
         uint32_t available = effect_ringbuffer_get_read_available(&session->inputRb);
         if (available < bufferSize) {
             // Not enough data
@@ -89,6 +119,7 @@ static void* processing_thread_func(void* arg) {
             pthread_mutex_unlock(&session->statsMutex);
             continue;
         }
+#endif
         
         // Signal output data available
         effect_eventfd_signal(session->eventFdOut);
