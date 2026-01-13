@@ -71,11 +71,17 @@ For detailed design documentation, see [DESIGN.md](DESIGN.md)
 
 ```
 Audio HAL (libeffect_client.so)
-    ↕ HIDL (Control) + Shared Memory (Data)
+    ↕ HIDL (Control) + FMQ (Data)
 effectd Process
     ↓ dlopen/dlsym
 Third-party Libraries (libwt_ksong_signalprocessing.so, libwt_signalprocessing.so, etc.)
 ```
+
+**数据传输 (Data Transfer)**: 
+- **Android**: 使用 Fast Message Queue (FMQ) 进行零拷贝音频数据传输
+- **Standalone**: 使用共享内存 + 自定义 ring buffer (兼容模式)
+
+详见 [FMQ_MIGRATION.md](FMQ_MIGRATION.md) 了解 FMQ 实现细节。
 
 ## 目录结构 (Directory Structure)
 

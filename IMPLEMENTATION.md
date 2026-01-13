@@ -15,11 +15,12 @@ This project has fully implemented the migration of third-party audio algorithms
 - 操作: open, start, stop, close, setParam, queryStats
 - 预留 AIDL 迁移路径
 
-**数据面 (Data Plane) - Shared Memory**
-- 使用 memfd_create (优先) 或 ashmem (兼容)
-- 双向 lock-free ring buffer
-- eventfd 唤醒机制
+**数据面 (Data Plane) - Fast Message Queue (FMQ)**
+- 使用 Android HIDL FMQ (MessageQueue)
 - 零拷贝 PCM 数据传输
+- 同步读写模式 (kSynchronizedReadWrite)
+- eventfd 用于超时控制 (可选)
+- 非 Android 平台: 使用 memfd_create/ashmem + 自定义 ring buffer (兼容模式)
 
 ### 2. 关键代码文件 (Key Code Files)
 
@@ -34,11 +35,13 @@ hidl/1.0/
 ```
 common/
 ├── include/
-│   ├── effect_shared_memory.h   # 共享内存管理
-│   └── effect_ringbuffer.h      # Lock-free 环形缓冲区
+│   ├── effect_fmq.h              # FMQ 包装器 API
+│   ├── effect_shared_memory.h    # 共享内存管理 (兼容模式)
+│   └── effect_ringbuffer.h       # Lock-free 环形缓冲区 (兼容模式)
 └── src/
-    ├── effect_shared_memory.c
-    └── effect_ringbuffer.c      # 原子操作实现
+    ├── effect_fmq.cpp            # FMQ 实现
+    ├── effect_shared_memory.c    # 共享内存实现 (兼容模式)
+    └── effect_ringbuffer.c       # 原子操作实现 (兼容模式)
 ```
 
 #### effectd 服务端
@@ -71,11 +74,19 @@ client/
   - ✅ 20ms 超时保护
 
 #### 低延迟设计 (Low Latency Design)
-- Ring buffer 使用 C11 atomic 操作
+- **Android**: FMQ 使用原子操作和共享内存
+- **Standalone**: Ring buffer 使用 C11 atomic 操作
 - Memory ordering: acquire-release 语义
 - 单生产者单消费者优化
 - 零拷贝数据传输
 
+**Android FMQ 特性:**
+- `MessageQueue<uint8_t, kSynchronizedReadWrite>`
+- 内部使用 GrantorDescriptor 管理共享内存
+- 自动处理环形缓冲区回绕
+- 线程安全的读写计数器
+
+**兼容模式 Ring Buffer:**
 ```c
 // 核心实现示例
 uint32_t effect_ringbuffer_write(effect_ringbuffer_t* rb, const void* data, uint32_t size) {
@@ -112,16 +123,22 @@ if (result == EFFECT_ERROR_TIMEOUT) {
 ### 5. 多实例支持 (Multi-instance Support)
 
 - 每个 session 独立:
-  - 独立的共享内存区域
-  - 独立的 eventfd 对
-  - 独立的 ring buffer
+  - 独立的 FMQ 队列对（input + output）
+  - 独立的 eventfd 对（可选）
   - 独立的处理线程
+  - 独立的统计信息
 
 - 示例使用场景:
   ```
   Session 1: 无麦K歌 (48kHz, 2ch, PCM_16)
+            Input FMQ: HAL -> effectd
+            Output FMQ: effectd -> HAL
+  
   Session 2: 普通降噪 (48kHz, 1ch, PCM_16)
-  同时运行，互不干扰
+            Input FMQ: HAL -> effectd
+            Output FMQ: effectd -> HAL
+  
+  同时运行，互不干扰，各自独立的内存空间
   ```
 
 ### 6. SELinux 策略 (SELinux Policy)

@@ -3,6 +3,10 @@
  * 
  * This demonstrates how to integrate libeffect_client.so into an Audio HAL
  * to process audio with crash isolation.
+ * 
+ * NOTE: The client library uses Android Fast Message Queue (FMQ) for data
+ * transfer on Android platforms, and shared memory + ring buffer on standalone
+ * builds. The API is identical regardless of implementation.
  */
 
 #include <stdio.h>

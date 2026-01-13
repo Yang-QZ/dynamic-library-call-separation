@@ -16,10 +16,10 @@ interface IEffectService {
      * @param config Audio configuration
      * @return result Result code
      * @return sessionId Unique session identifier (valid if result == OK)
-     * @return memInfo Shared memory and eventfd information for data plane
+     * @return fmqInfo FMQ (Fast Message Queue) information for data plane
      */
     open(EffectType effectType, AudioConfig config)
-        generates (Result result, uint32_t sessionId, SharedMemoryInfo memInfo);
+        generates (Result result, uint32_t sessionId, FmqInfo fmqInfo);
 
     /**
      * Start processing for a session

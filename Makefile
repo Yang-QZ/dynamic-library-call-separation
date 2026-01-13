@@ -1,7 +1,9 @@
 # Makefile for building and testing outside Android build system
 
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c11 -pthread -D_GNU_SOURCE -I./common/include -I./client/include -I./effectd/include
+CXX = g++
+CFLAGS = -Wall -Wextra -std=c11 -pthread -D_GNU_SOURCE -DUSE_SHARED_MEMORY=1 -I./common/include -I./client/include -I./effectd/include
+CXXFLAGS = -Wall -Wextra -std=c++11 -pthread -D_GNU_SOURCE -DUSE_SHARED_MEMORY=1 -I./common/include -I./client/include -I./effectd/include
 LDFLAGS = -pthread -lrt -ldl
 
 # Output binary names
@@ -11,8 +13,11 @@ COMMON_LIB = libeffect_common.a
 TEST_BIN = test_ringbuffer
 
 # Common library
-COMMON_SRCS = common/src/effect_shared_memory.c common/src/effect_ringbuffer.c
-COMMON_OBJS = $(COMMON_SRCS:.c=.o)
+COMMON_C_SRCS = common/src/effect_shared_memory.c common/src/effect_ringbuffer.c
+COMMON_CPP_SRCS = common/src/effect_fmq.cpp
+COMMON_C_OBJS = $(COMMON_C_SRCS:.c=.o)
+COMMON_CPP_OBJS = $(COMMON_CPP_SRCS:.cpp=.o)
+COMMON_OBJS = $(COMMON_C_OBJS) $(COMMON_CPP_OBJS)
 
 # Client library
 CLIENT_SRCS = client/src/effect_client.c
@@ -35,13 +40,16 @@ $(CLIENT_LIB): $(CLIENT_OBJS) $(COMMON_LIB)
 	$(CC) -shared -o $@ $^ $(LDFLAGS)
 
 $(SERVER_BIN): $(SERVER_OBJS) $(COMMON_LIB)
-	$(CC) -o $@ $^ $(LDFLAGS)
+	$(CXX) -o $@ $^ $(LDFLAGS)
 
 $(TEST_BIN): $(TEST_OBJS) $(COMMON_LIB)
 	$(CC) -o $@ $^ $(LDFLAGS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -fPIC -c $< -o $@
+
+%.o: %.cpp
+	$(CXX) $(CXXFLAGS) -fPIC -c $< -o $@
 
 clean:
 	rm -f $(COMMON_OBJS) $(CLIENT_OBJS) $(SERVER_OBJS) $(TEST_OBJS)

@@ -5,6 +5,7 @@ cc_library {
     srcs: [
         "common/src/effect_shared_memory.c",
         "common/src/effect_ringbuffer.c",
+        "common/src/effect_fmq.cpp",
     ],
     export_include_dirs: ["common/include"],
     cflags: [
@@ -14,6 +15,8 @@ cc_library {
     ],
     shared_libs: [
         "liblog",
+        "libfmq",
+        "libhidlbase",
     ],
 }
 
